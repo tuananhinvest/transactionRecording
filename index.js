@@ -11,11 +11,6 @@ dotenv.config();
 // --- CẤU HÌNH DANH SÁCH USERNAME ĐƯỢC PHÉP CHẠY LỆNH ---
 const ALLOWED_USERNAMES = ["tuananhinvest", "cuong2386"];
 
-// --- Hàm định dạng số có dấu phân cách hàng nghìn (Ví dụ: 25175000 -> 25.175.000) ---
-function formatNumber(num) {
-    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
-
 // --- 1. Hàm làm sạch tên Nhóm (Chỉ giữ lại tên Khách hàng) ---
 function cleanGroupName(rawName) {
     if (!rawName) return "Unknown Chat";
@@ -68,7 +63,7 @@ const apiHash = process.env.TELEGRAM_API_HASH;
 
 // 💡 Để chuỗi rỗng "" ở lần đầu chạy để sinh mã session mới. 
 // Sau khi bot in chuỗi session ra màn hình, bạn có thể dán nó vào đây để không phải đăng nhập lại.
-const stringSession = new StringSession(""); 
+const stringSession = new StringSession("1BQANOTEuMTA4LjU2LjEyNgG7Pj8DaZpdwJoeMQ7f3vVFaS1eF+0fsAq2opszM/btyOyoQK6i8f62bllPQogLZQfLbTpmiIF99T1uC/0VDketrp3r2fuKkm8qn+jkP/LKpC8uSgO0G/2gpQWc/PYgzkaneMhVWYebSD4gRoMYj37kuiym4UcXL6Wsjkyqyo2BX0Wda4uxOe3WymCjehYbuMOHmh1+1EMfbsSxAhRDAmzjMrCmyRoC2DQjYHbtn6eXwvY8xFU3OkJrTvVqdRzAmdHQtUv3tJojEwnybXoNBYyF9tYXOELXi6z/6BeS7q9F4h8r9EXaelYZVbaVNi9LaIolOc+Xmg/lG7QQsVkQTaMt1w=="); 
 
 const client = new TelegramClient(stringSession, apiId, apiHash, {
     connectionRetries: 5,
@@ -103,7 +98,7 @@ async function start() {
     
     console.log("🤖 Bot Telegram đã kết nối thành công!");
     
-    // ✨ YÊU CẦU 1: In mã Session lần đầu để bạn lưu lại sử dụng lâu dài
+    // In mã Session lần đầu để bạn lưu lại sử dụng lâu dài
     const savedSession = client.session.save();
     console.log("\n=================== TELEGRAM SESSION STRING ===================");
     console.log("🔑 Hãy sao chép chuỗi mã bên dưới và dán vào phần khởi tạo StringSession(\"chuỗi_ở_đây\") để bỏ qua đăng nhập lần sau:");
@@ -159,7 +154,6 @@ async function start() {
                         await targetRow.delete();
                         console.log(`🔥 Đã xóa thành công giao dịch có STT: ${deletedStt} tại sheet ${monthYearString}`);
                         
-                        // Gửi thông báo đã hủy thành công vào nhóm (Tuỳ chọn bổ sung giúp bạn dễ theo dõi)
                         await client.sendMessage(message.peerId, {
                             message: `🔥 Đã xoá giao dịch gốc (Tin nhắn gốc ID: ${replyToMessageId})`,
                             replyTo: message.id
@@ -232,16 +226,15 @@ async function start() {
                     isSuccess = true;
                 }
 
-                // ✨ YÊU CẦU 2: Gửi thêm một tin nhắn trả về phép tính đúng nhóm vừa nhận lệnh
+                // Gửi tin nhắn trả về phép tính trơn (Không có dấu phân cách) vào nhóm
                 if (isSuccess) {
-                    // Định dạng text phản hồi dạng: 950 * 26.500 = 25.175.000
-                    const replyText = `${formatNumber(quantity)} * ${formatNumber(price)} = ${formatNumber(volume)}`;
+                    const replyText = `${quantity} * ${price} = ${volume}`;
                     
                     await client.sendMessage(message.peerId, {
                         message: replyText,
-                        replyTo: message.id // Trả lời (reply) trực tiếp vào tin nhắn chứa lệnh chốt vừa rồi
+                        replyTo: message.id // Trả lời trực tiếp vào tin nhắn chứa lệnh
                     });
-                    console.log(`📩 Đã gửi tin nhắn tính toán vào nhóm: "${replyText}"`);
+                    console.log(`📩 Đã gửi tin nhắn tính toán trơn vào nhóm: "${replyText}"`);
                 }
 
             } catch (error) {
