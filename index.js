@@ -61,8 +61,7 @@ async function getOrCreateSheetForMonth(monthYearString) {
 const apiId = parseInt(process.env.TELEGRAM_API_ID);
 const apiHash = process.env.TELEGRAM_API_HASH;
 
-// 💡 Để chuỗi rỗng "" ở lần đầu chạy để sinh mã session mới. 
-// Sau khi bot in chuỗi session ra màn hình, bạn có thể dán nó vào đây để không phải đăng nhập lại.
+// Dán chuỗi session của bạn vào đây
 const stringSession = new StringSession("1BQANOTEuMTA4LjU2LjE2OAG7rO4nc9jv58ctrpKpU4JofO1Z7uFOjNPTV9yL4sdAA3nok3k/wsKZKCfif8tHCdMCzNqyr6tf+G48/FAS3oLDBEbjbnJCeHiUzlTvR15hidFx0lSfuNq0S6F7PczyEZd9PhBzbZFInNkAjrpgo66yftbKn+Sgjns81PYBwoLixGml9tHAEW7etQIoTAKaJoOm5zA0R8+qgYQ0YsawcyDKZ4J14Z/st8RjVK9JDdebqBPJ5uj/Uxbqo/hSGCGoBSl/fbbbIMaXdo9K2C7I9TnqmDM0Su86jrZU2dnUggs/jjPUl0iiMkVgZazjzi7jMMwvzKaoyFqOCs8WGxJtheu0iw=="); 
 
 const client = new TelegramClient(stringSession, apiId, apiHash, {
@@ -98,10 +97,8 @@ async function start() {
     
     console.log("🤖 Bot Telegram đã kết nối thành công!");
     
-    // In mã Session lần đầu để bạn lưu lại sử dụng lâu dài
     const savedSession = client.session.save();
     console.log("\n=================== TELEGRAM SESSION STRING ===================");
-    console.log("🔑 Hãy sao chép chuỗi mã bên dưới và dán vào phần khởi tạo StringSession(\"chuỗi_ở_đây\") để bỏ qua đăng nhập lần sau:");
     console.log(`\n${savedSession}\n`);
     console.log("===============================================================\n");
 
@@ -153,11 +150,6 @@ async function start() {
                         const deletedStt = targetRow.get("STT");
                         await targetRow.delete();
                         console.log(`🔥 Đã xóa thành công giao dịch có STT: ${deletedStt} tại sheet ${monthYearString}`);
-                        
-                        //await client.sendMessage(message.peerId, {
-                        //    message: `🔥 Đã xoá giao dịch gốc (Tin nhắn gốc ID: ${replyToMessageId})`,
-                        //    replyTo: message.id
-                        //});
                     } else {
                         console.log(`⚠️ Không tìm thấy giao dịch gốc để xóa trong sheet ${monthYearString}.`);
                     }
@@ -168,16 +160,43 @@ async function start() {
             return; 
         }
 
-        // XỬ LÝ LỆNH CHỐT GIAO DỊCH
-        const match = text.match(/^\/(chotmua|chotban)\s+(\d+)[uU]?\/(\d+)/);
+        // XỬ LÝ LỆNH CHỐT GIAO DỊCH (Hỗ trợ cả dạng U và dạng triệu VNĐ)
+        // Regex bắt được các định dạng: /chotmua 30000/26370 hoặc /chotban 100tr/26500 hoặc /chotmua 50m/26400
+        const match = text.match(/^\/(chotmua|chotban)\s+(\d+)([uU]|tr|m|triệu|trieu)?\/(\d+)/i);
 
         if (match) {
             try {
-                const command = match[1]; 
+                const command = match[1].toLowerCase(); 
                 const position = command === "chotmua" ? "Mua" : "Bán";
-                const quantity = parseInt(match[2]);
-                const price = parseInt(match[3]);
-                const volume = quantity * price;
+                
+                const rawValue1 = parseInt(match[2]);                 // Số lượng nhập vào ban đầu
+                const unit = match[3] ? match[3].toLowerCase() : "u"; // Đơn vị tính (mặc định là u nếu không nhập)
+                const price = parseInt(match[4]);                     // Giá tỷ giá chốt
+
+                let quantity = 0;
+                let volume = 0;
+                let replyText = "";
+
+                // Kiểm tra xem người dùng chốt theo VNĐ (Triệu) hay chốt theo Số lượng U
+                if (["tr", "m", "triệu", "trieu"].includes(unit)) {
+                    // --- TRƯỜNG HỢP: CHỐT THEO VNĐ (TRIỆU) ---
+                    volume = rawValue1 * 1000000;                     // Khối lượng VNĐ = X triệu
+                    const calculatedQty = volume / price;             // Số lượng U = Khối lượng / Giá
+                    
+                    // Làm tròn 5 chữ số thập phân, nếu là số nguyên tròn thì không cần phần thập phân
+                    quantity = Number(calculatedQty.toFixed(5));
+                    
+                    // Định dạng hiển thị tin nhắn phản hồi dạng Chia (/)
+                    replyText = `${volume}/${price} = ${quantity}`;
+                } else {
+                    // --- TRƯỜNG HỢP: CHỐT THEO SỐ LƯỢNG U (MẶC ĐỊNH) ---
+                    quantity = rawValue1;                             // Số lượng U
+                    volume = quantity * price;                        // Khối lượng VNĐ
+                    
+                    // Định dạng hiển thị tin nhắn phản hồi dạng Nhân (*)
+                    replyText = `${quantity} * ${price} = ${volume}`;
+                }
+
                 const messageId = message.id.toString();
                 
                 // Lấy tên gốc của nhóm
@@ -226,15 +245,13 @@ async function start() {
                     isSuccess = true;
                 }
 
-                // Gửi tin nhắn trả về phép tính trơn (Không có dấu phân cách) vào nhóm
+                // Gửi tin nhắn trả về kết quả trơn (Không chứa dấu chấm hàng nghìn) vào nhóm
                 if (isSuccess) {
-                    const replyText = `${quantity} * ${price} = ${volume}`;
-                    
                     await client.sendMessage(message.peerId, {
                         message: replyText,
-                        replyTo: message.id // Trả lời trực tiếp vào tin nhắn chứa lệnh
+                        replyTo: message.id 
                     });
-                    console.log(`📩 Đã gửi tin nhắn tính toán trơn vào nhóm: "${replyText}"`);
+                    console.log(`📩 Đã gửi tin nhắn tính toán vào nhóm: "${replyText}"`);
                 }
 
             } catch (error) {
