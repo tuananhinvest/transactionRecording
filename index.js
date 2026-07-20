@@ -68,6 +68,11 @@ const client = new TelegramClient(stringSession, apiId, apiHash, {
     connectionRetries: 5,
 });
 
+function formatForSheet(value) {
+    if (value === undefined || value === null) return "";
+    return value.toString().replace(/\./g, ",");
+}
+
 async function addNewRow(sheet, position, quantity, price, volume, date, groupName, groupId, messageId) {
     const rows = await sheet.getRows();
     const stt = rows.length + 1; 
@@ -75,7 +80,7 @@ async function addNewRow(sheet, position, quantity, price, volume, date, groupNa
     await sheet.addRow({
         "STT": stt.toString(),
         "Lệnh": position,
-        "Số lượng": quantity.toString(),
+        "Số lượng": formatForSheet(quantity),
         "Giá": price.toString(),
         "Khối lượng": volume.toString(),
         "Thời gian giao dịch": date,
@@ -184,7 +189,7 @@ async function start() {
                     const calculatedQty = volume / price;             // Số lượng U = Khối lượng / Giá
                     
                     // Làm tròn 5 chữ số thập phân, nếu là số nguyên tròn thì không cần phần thập phân
-                    quantity = Number(calculatedQty.toFixed(5));
+                    quantity = Number(calculatedQty.toFixed(1));
                     
                     // Định dạng hiển thị tin nhắn phản hồi dạng Chia (/)
                     replyText = `${volume}/${price} = ${quantity}`;
