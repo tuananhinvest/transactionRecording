@@ -63,7 +63,7 @@ const apiHash = process.env.TELEGRAM_API_HASH;
 
 // 💡 Để chuỗi rỗng "" ở lần đầu chạy để sinh mã session mới. 
 // Sau khi bot in chuỗi session ra màn hình, bạn có thể dán nó vào đây để không phải đăng nhập lại.
-const stringSession = new StringSession("1BQANOTEuMTA4LjU2LjEyNgG7Pj8DaZpdwJoeMQ7f3vVFaS1eF+0fsAq2opszM/btyOyoQK6i8f62bllPQogLZQfLbTpmiIF99T1uC/0VDketrp3r2fuKkm8qn+jkP/LKpC8uSgO0G/2gpQWc/PYgzkaneMhVWYebSD4gRoMYj37kuiym4UcXL6Wsjkyqyo2BX0Wda4uxOe3WymCjehYbuMOHmh1+1EMfbsSxAhRDAmzjMrCmyRoC2DQjYHbtn6eXwvY8xFU3OkJrTvVqdRzAmdHQtUv3tJojEwnybXoNBYyF9tYXOELXi6z/6BeS7q9F4h8r9EXaelYZVbaVNi9LaIolOc+Xmg/lG7QQsVkQTaMt1w=="); 
+const stringSession = new StringSession("1BQANOTEuMTA4LjU2LjE2OAG7rO4nc9jv58ctrpKpU4JofO1Z7uFOjNPTV9yL4sdAA3nok3k/wsKZKCfif8tHCdMCzNqyr6tf+G48/FAS3oLDBEbjbnJCeHiUzlTvR15hidFx0lSfuNq0S6F7PczyEZd9PhBzbZFInNkAjrpgo66yftbKn+Sgjns81PYBwoLixGml9tHAEW7etQIoTAKaJoOm5zA0R8+qgYQ0YsawcyDKZ4J14Z/st8RjVK9JDdebqBPJ5uj/Uxbqo/hSGCGoBSl/fbbbIMaXdo9K2C7I9TnqmDM0Su86jrZU2dnUggs/jjPUl0iiMkVgZazjzi7jMMwvzKaoyFqOCs8WGxJtheu0iw=="); 
 
 const client = new TelegramClient(stringSession, apiId, apiHash, {
     connectionRetries: 5,
@@ -154,10 +154,10 @@ async function start() {
                         await targetRow.delete();
                         console.log(`🔥 Đã xóa thành công giao dịch có STT: ${deletedStt} tại sheet ${monthYearString}`);
                         
-                        await client.sendMessage(message.peerId, {
-                            message: `🔥 Đã xoá giao dịch gốc (Tin nhắn gốc ID: ${replyToMessageId})`,
-                            replyTo: message.id
-                        });
+                        //await client.sendMessage(message.peerId, {
+                        //    message: `🔥 Đã xoá giao dịch gốc (Tin nhắn gốc ID: ${replyToMessageId})`,
+                        //    replyTo: message.id
+                        //});
                     } else {
                         console.log(`⚠️ Không tìm thấy giao dịch gốc để xóa trong sheet ${monthYearString}.`);
                     }
