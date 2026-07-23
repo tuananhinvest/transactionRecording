@@ -62,7 +62,7 @@ const apiId = parseInt(process.env.TELEGRAM_API_ID);
 const apiHash = process.env.TELEGRAM_API_HASH;
 
 // Dán chuỗi session của bạn vào đây
-const stringSession = new StringSession("1BQANOTEuMTA4LjU2LjE2OAG7rO4nc9jv58ctrpKpU4JofO1Z7uFOjNPTV9yL4sdAA3nok3k/wsKZKCfif8tHCdMCzNqyr6tf+G48/FAS3oLDBEbjbnJCeHiUzlTvR15hidFx0lSfuNq0S6F7PczyEZd9PhBzbZFInNkAjrpgo66yftbKn+Sgjns81PYBwoLixGml9tHAEW7etQIoTAKaJoOm5zA0R8+qgYQ0YsawcyDKZ4J14Z/st8RjVK9JDdebqBPJ5uj/Uxbqo/hSGCGoBSl/fbbbIMaXdo9K2C7I9TnqmDM0Su86jrZU2dnUggs/jjPUl0iiMkVgZazjzi7jMMwvzKaoyFqOCs8WGxJtheu0iw=="); 
+const stringSession = new StringSession("1BQANOTEuMTA4LjU2LjE2OAG7aVQdMST4uRXvtmP9hCqe4Rb9Wn9l6c7OeszJxlOZMxQUQogp8iRCbi3iBb4EW2CUSZAf4GKgYPzar4rn7Oul0TYsP6/447/OEp6wviDdSCWJeuiy9jy1dP2VAOv9fT9k5FbHaCkWH2Apt5d8wRG6aKnlypfT64lmxD34bEw5nFYaL6eQZXQD/hjo463K9LEam2wb1pEvVU9pmh8ZblTmH5kipk8pSmnWAX5x6coqNWwdghh4x8JmIJKGT2bK70ly2F6hmyV9joCZFmqtM6ubdF8vvS4SrAKkSOTFmZk9QtkOSh2g702jh0VXNMbJzDWK0Xx6LBzgTPYQnfSY3cJM6g=="); 
 
 const client = new TelegramClient(stringSession, apiId, apiHash, {
     connectionRetries: 5,
@@ -265,5 +265,19 @@ async function start() {
         }
     }, new NewMessage({}));
 }
+
+async function gracefulShutdown() {
+    console.log("\n🔌 Đang ngắt kết nối với Telegram...");
+    try {
+        await client.disconnect();
+        console.log("👋 Đã ngắt kết nối an toàn.");
+    } catch (err) {
+        console.error("Lỗi khi ngắt kết nối:", err);
+    }
+    process.exit(0);
+}
+
+process.on("SIGINT", gracefulShutdown);
+process.on("SIGTERM", gracefulShutdown);
 
 start().catch(console.error);
