@@ -167,16 +167,16 @@ async function start() {
 
         // XỬ LÝ LỆNH CHỐT GIAO DỊCH (Hỗ trợ cả dạng U và dạng triệu VNĐ)
         // Regex bắt được các định dạng: /chotmua 30000/26370 hoặc /chotban 100tr/26500 hoặc /chotmua 50m/26400
-        const match = text.match(/^\/(chotmua|chotban)\s+(\d+)([uU]|tr|m|triệu|trieu)?\/(\d+)/i);
+        const match = text.match(/^\/(chotmua|chotban)\s+(\d+(?:\.\d+)?)([uU]|tr|m|triệu|trieu)?\/(\d+(?:\.\d+)?)/i);
 
         if (match) {
             try {
                 const command = match[1].toLowerCase(); 
                 const position = command === "chotmua" ? "Mua" : "Bán";
                 
-                const rawValue1 = parseInt(match[2]);                 // Số lượng nhập vào ban đầu
+                const rawValue1 = parseFloat(match[2]);                 // Số lượng nhập vào ban đầu
                 const unit = match[3] ? match[3].toLowerCase() : "u"; // Đơn vị tính (mặc định là u nếu không nhập)
-                const price = parseInt(match[4]);                     // Giá tỷ giá chốt
+                const price = parseFloat(match[4]);                     // Giá tỷ giá chốt
 
                 let quantity = 0;
                 let volume = 0;
