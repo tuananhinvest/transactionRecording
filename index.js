@@ -231,7 +231,7 @@ async function start() {
 
                     if (targetRow) {
                         targetRow.set("Lệnh", position);
-                        targetRow.set("Số lượng", quantity.toString());
+                        targetRow.set("Số lượng", formatForSheet(quantity));
                         targetRow.set("Giá", price.toString());
                         targetRow.set("Khối lượng", volume.toString());
                         targetRow.set("Thời gian giao dịch", vnDateString);
